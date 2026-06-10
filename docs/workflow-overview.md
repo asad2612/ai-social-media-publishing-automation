@@ -1,18 +1,63 @@
 # Workflow Overview
 
-This document describes the high-level AI-powered social media publishing workflow.
+This workflow automates the publishing of scheduled LinkedIn posts using n8n, Google Sheets, and the LinkedIn REST API.
 
-## Goals
+---
 
-- Automate content generation and publishing across platforms
-- Track status and results for auditing and retries
-- Provide modular steps for prompt engineering and integrations
+## 1. Weekly Scheduler
+Triggers every Monday at 10:00 AM.
 
-## High-level steps
+---
 
-1. Input content or brief (CSV, spreadsheet, UI)
-2. Content generation (AI model) with prompts and templates
-3. Platform-specific formatting and scheduling
-4. API calls to publish and record responses
-5. Retry and error handling for failed publishes
-6. Tracking and reporting
+## 2. Fetch Content Calendar
+Reads rows from Google Sheets → "Automation Ready" tab.
+
+---
+
+## 3. Filter Ready‑to‑Publish Posts
+Custom JS:
+
+- post_date ≤ today  
+- status = "ready"
+
+Only valid posts continue.
+
+---
+
+## 4. Retrieve Media Asset
+Downloads the image file from the URL stored in the sheet.
+
+---
+
+## 5. Create LinkedIn Upload Session
+Initializes media upload:
+POST https://api.linkedin.com/rest/images?action=initializeUpload (api.linkedin.com in Bing)
+
+Returns:
+- uploadUrl  
+- image URN
+
+---
+
+## 6. Upload Media to LinkedIn
+Binary upload via PUT request.
+
+---
+
+## 7. Publish LinkedIn Post
+Publishes caption + media:
+POST https://api.linkedin.com/rest/posts
+
+---
+
+## 8. Validate Publishing Success
+Checks if statusCode = 201.
+
+---
+
+## 9. Update Content Tracker
+Writes:
+- posted / failed  
+- timestamp  
+- LinkedIn post URN  
+- error logs
