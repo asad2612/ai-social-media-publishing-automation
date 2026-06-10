@@ -1,0 +1,10 @@
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "platform": "linkedin",
+  "status": "published",
+  "published_at": "2026-06-10T15:00:00Z",
+  "platform_response": {
+    "post_id": "urn:li:share:987654321",
+    "visibility": "PUBLIC"
+  }
+}

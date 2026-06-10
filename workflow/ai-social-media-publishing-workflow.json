@@ -1,0 +1,31 @@
+{
+  "workflow": "ai-social-media-publishing",
+  "version": "1.0",
+  "steps": [
+    {
+      "id": "ingest",
+      "type": "input",
+      "description": "Receive content brief from UI or CSV"
+    },
+    {
+      "id": "generate",
+      "type": "ai",
+      "description": "Call AI model to generate post text and metadata"
+    },
+    {
+      "id": "format",
+      "type": "transform",
+      "description": "Format text for target platforms"
+    },
+    {
+      "id": "publish",
+      "type": "http",
+      "description": "Call platform APIs to publish content"
+    },
+    {
+      "id": "record",
+      "type": "storage",
+      "description": "Record status and responses"
+    }
+  ]
+}

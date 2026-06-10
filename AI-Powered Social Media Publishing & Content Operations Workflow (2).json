@@ -1,0 +1,805 @@
+{
+  "name": "AI-Powered Social Media Publishing & Content Operations Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return items.filter(item => {\n  const postDate = String(item.json.post_date || '').trim();\n  const status = String(item.json.status || '').trim().toLowerCase();\n  const today = new Date().toISOString().slice(0, 10);\n\n  return postDate <= today && status === 'ready';\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2464,
+        -624
+      ],
+      "id": "e072cc2b-f048-4fd5-b77f-42c8156ef47f",
+      "name": "Filter Ready-to-Publish Posts"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -2880,
+        -624
+      ],
+      "id": "c99ddd2a-4a87-4e6a-86fd-c94c7ceca0f2",
+      "name": "Weekly Content Scheduler1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0",
+          "mode": "list",
+          "cachedResultName": "Content Operations Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 374111653,
+          "mode": "list",
+          "cachedResultName": "Automation Ready",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0/edit#gid=374111653"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2672,
+        -624
+      ],
+      "id": "89256530-eb41-4ef6-bc35-86d06ce636da",
+      "name": "Fetch Content Calendar",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2PJNsg3pf4dzEIpO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2256,
+        -624
+      ],
+      "id": "b05423c6-8dd5-44de-a80f-5a78f49fa419",
+      "name": "Retrieve Media Asset"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linkedin.com/rest/images?action=initializeUpload",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Linkedin-Version",
+              "value": "202601"
+            },
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"initializeUploadRequest\": {\n    \"owner\": \"urn:li:organization:107909136\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2016,
+        -768
+      ],
+      "id": "9072a856-a5d2-4472-90a0-7a1c30d8a69e",
+      "name": "Create LinkedIn Upload Session",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "Dgn8A0fuOtjY4SeV",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1776,
+        -640
+      ],
+      "id": "8e4bb9a9-aa1f-4e62-8bcb-107cf97b9dc8",
+      "name": "Prepare LinkedIn Media Package"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $json.value.uploadUrl }}",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1568,
+        -640
+      ],
+      "id": "c7e92a8e-35f8-4f2c-a59e-2cf4b34deb83",
+      "name": "Upload Media to LinkedIn"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linkedin.com/rest/posts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Linkedin-Version",
+              "value": "202601"
+            },
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"author\": \"urn:li:organization:107909136\",\n  \"commentary\": \"{{ $node['Fetch Content Calendar'].json['linkedin_caption'] }}\",\n  \"visibility\": \"PUBLIC\",\n  \"distribution\": {\n    \"feedDistribution\": \"MAIN_FEED\",\n    \"targetEntities\": [],\n    \"thirdPartyDistributionChannels\": []\n  },\n  \"content\": {\n    \"media\": {\n      \"altText\": \"{{ $node['Fetch Content Calendar'].json['post_concept'] || 'Social media image' }}\",\n      \"id\": \"{{ $node['Create LinkedIn Upload Session'].json['value']['image'] }}\"\n    }\n  },\n  \"lifecycleState\": \"PUBLISHED\",\n  \"isReshareDisabledByAuthor\": false\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1360,
+        -640
+      ],
+      "id": "f7483cef-d81f-4acf-be27-8d8786a723ea",
+      "name": "Publish LinkedIn Post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "Dgn8A0fuOtjY4SeV",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0d93129f-7c43-4e4f-b436-60952926d74e",
+              "leftValue": "={{$json.statusCode}}",
+              "rightValue": "=201",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1232,
+        -384
+      ],
+      "id": "3e89b7e6-9398-4456-a31e-55231cc69f87",
+      "name": "Validate Publishing Success"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0",
+          "mode": "list",
+          "cachedResultName": "Insta Content Automate Sample",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 374111653,
+          "mode": "list",
+          "cachedResultName": "Automation Ready",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0/edit#gid=374111653"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "post_id": "={{ $node[\"Fetch Content Calendar\"].json[\"post_id\"] }}",
+            "status": "posted",
+            "posted_at": "={{ $now.toISO() }}",
+            "post_linkedin": "={{ $node[\"Publish LinkedIn Post\"].json.headers[\"x-restli-id\"] }}",
+            "notes": "={{ 'Created | ' + $node[\"Publish LinkedIn Post\"].json.statusCode + ' | ' + $node[\"Publish LinkedIn Post\"].json.headers[\"x-restli-id\"] }}"
+          },
+          "matchingColumns": [
+            "post_id"
+          ],
+          "schema": [
+            {
+              "id": "post_id",
+              "displayName": "post_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "post_date",
+              "displayName": "post_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "day",
+              "displayName": "day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content_pillar",
+              "displayName": "content_pillar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_concept",
+              "displayName": "post_concept",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedin_caption",
+              "displayName": "linkedin_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "facebook_caption",
+              "displayName": "facebook_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "instagram_caption",
+              "displayName": "instagram_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cta",
+              "displayName": "cta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_linkedin",
+              "displayName": "post_linkedin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_facebook",
+              "displayName": "post_facebook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_instagram",
+              "displayName": "post_instagram",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "posted_at",
+              "displayName": "posted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -944,
+        -544
+      ],
+      "id": "fbe59397-b520-4888-ad29-038550f5deab",
+      "name": "Mark Post as Published",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2PJNsg3pf4dzEIpO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0",
+          "mode": "list",
+          "cachedResultName": "Insta Content Automate Sample",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 374111653,
+          "mode": "list",
+          "cachedResultName": "Automation Ready",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mHJcDITxaujyTLzJXtQ4pftfxpmpX0NvDdCXKtiPaW0/edit#gid=374111653"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "post_id": "={{ $node[\"Fetch Content Calendar\"].json[\"post_id\"] }}",
+            "status": "failed",
+            "posted_at": "={{ $now.toISO() }}",
+            "post_linkedin": "={{ $node[\"Publish LinkedIn Post\"].json.headers?.[\"x-restli-id\"] || \"\" }}",
+            "notes": "={{ JSON.stringify($node[\"Publish LinkedIn Post\"].json.body || $node[\"Publish LinkedIn Post\"].json) }}"
+          },
+          "matchingColumns": [
+            "post_id"
+          ],
+          "schema": [
+            {
+              "id": "post_id",
+              "displayName": "post_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "post_date",
+              "displayName": "post_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "day",
+              "displayName": "day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content_pillar",
+              "displayName": "content_pillar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_concept",
+              "displayName": "post_concept",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedin_caption",
+              "displayName": "linkedin_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "facebook_caption",
+              "displayName": "facebook_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "instagram_caption",
+              "displayName": "instagram_caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cta",
+              "displayName": "cta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_linkedin",
+              "displayName": "post_linkedin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_facebook",
+              "displayName": "post_facebook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_instagram",
+              "displayName": "post_instagram",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "posted_at",
+              "displayName": "posted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -944,
+        -336
+      ],
+      "id": "1685ee24-a524-4c59-b3d1-62cc91aff78a",
+      "name": "Log Publishing Failure",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2PJNsg3pf4dzEIpO",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Filter Ready-to-Publish Posts": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Media Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Content Scheduler1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Content Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Content Calendar": {
+      "main": [
+        [
+          {
+            "node": "Filter Ready-to-Publish Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Media Asset": {
+      "main": [
+        [
+          {
+            "node": "Create LinkedIn Upload Session",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare LinkedIn Media Package",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Validate Publishing Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create LinkedIn Upload Session": {
+      "main": [
+        [
+          {
+            "node": "Prepare LinkedIn Media Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare LinkedIn Media Package": {
+      "main": [
+        [
+          {
+            "node": "Upload Media to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Media to LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Publish LinkedIn Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish LinkedIn Post": {
+      "main": [
+        [
+          {
+            "node": "Validate Publishing Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Publishing Success": {
+      "main": [
+        [
+          {
+            "node": "Mark Post as Published",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Publishing Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "011933bb-0841-4527-8816-92db34f14b3c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3fe56df90660bc6dab7d00bd0b29d5203f31251fd01a7a2f2809b59d1e98199e"
+  },
+  "id": "MkC4dOzHsHJ8sOf4",
+  "tags": []
+}
