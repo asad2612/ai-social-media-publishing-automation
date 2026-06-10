@@ -17,7 +17,40 @@ Payload:
 
 Responses:
 
-- 200 OK: { "status": "published", "id": "..." }
-- 4xx/5xx: { "status": "failed", "error": "..." }
 
 Include retry semantics and idempotency keys for safe retries.
+
+# API Requests
+
+## 1. Initialize Upload Session
+POST https://api.linkedin.com/rest/images?action=initializeUpload
+
+Headers:
+- Linkedin-Version: 202601
+- X-Restli-Protocol-Version: 2.0.0
+- Content-Type: application/json
+
+Body:
+{
+  "initializeUploadRequest": {
+    "owner": "urn:li:organization:107909136"
+  }
+}
+
+---
+
+## 2. Upload Media
+PUT {{uploadUrl}}
+
+Binary body: image file
+
+---
+
+## 3. Publish Post
+POST https://api.linkedin.com/rest/posts
+
+Body includes:
+- author
+- commentary
+- media ID
+- visibility

@@ -1,20 +1,20 @@
 # Data Structure
 
-Example canonical content object:
+## Google Sheets Columns
 
-- id: string (uuid)
-- source: string ("editor", "csv", "api")
-- author: { name, id }
-- brief: string
-- generated: {
-  - text: string
-  - variations: [ string ]
-  - metadata: { tone, length, hashtags }
-}
-- schedule: { publish_at: ISO8601, timezone }
-- platform: ["linkedin", "twitter", "facebook"]
-- status: "pending" | "scheduled" | "published" | "failed"
-- attempts: number
-- response: object (platform API response)
-
-Store this shape in a JSON column or document store for simplicity.
+| Column            | Description |
+|-------------------|-------------|
+| post_id           | Unique identifier |
+| post_date         | Scheduled date |
+| day               | Day of week |
+| content_pillar    | Category |
+| post_concept      | Concept name |
+| image_url         | Media URL |
+| linkedin_caption  | Caption text |
+| facebook_caption  | (unused in this workflow) |
+| instagram_caption | (unused in this workflow) |
+| cta               | Call to action |
+| status            | ready / posted / failed |
+| post_linkedin     | LinkedIn URN |
+| posted_at         | Timestamp |
+| notes             | Logs |

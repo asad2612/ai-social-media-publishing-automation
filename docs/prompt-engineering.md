@@ -1,12 +1,11 @@
-# Prompt Engineering
+# Prompt Engineering Notes
 
-Guidelines for building robust prompts for content generation:
+This workflow does not rely on LLM prompting.  
+However, prompt engineering is used in:
 
-- Use explicit instructions for format, tone, and length
-- Provide examples and constraints (e.g., character limits)
-- Ask the model to output JSON when programmatic parsing is required
-- Include safety checks and post-processing rules (no PII, no copyrighted content)
+- Caption formatting (stored in Sheets)
+- Dynamic alt-text generation
+- Error logging messages
 
-Sample prompt:
-
-"Write a LinkedIn post for a B2B SaaS founder announcing a new feature. Keep it under 1300 characters, professional tone, include a call-to-action, and suggest 3 hashtags in a JSON object: {\"text\": ..., \"hashtags\": [...] }"
+Example:
+"Created | {{statusCode}} | {{post_urn}}"

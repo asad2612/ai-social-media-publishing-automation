@@ -1,12 +1,19 @@
+
 # System Architecture
 
-Components:
+## Components
+- n8n workflow engine
+- Google Sheets (content calendar)
+- LinkedIn REST API
+- Media asset storage (URLs)
+- Logging & status tracking
 
-- Orchestrator: runs the workflow (serverless function, cron, or service)
-- AI Engine: model calls for content generation and rewriting
-- Formatter: converts generated content into platform-specific formats
-- Publisher: connectors for LinkedIn, Twitter/X, Facebook, etc.
-- Storage: content tracker (database, spreadsheet) and logs
-- Monitoring: alerts, dashboards, and retries
-
-Deployment: can be deployed as microservices or a serverless pipeline. Use queues (e.g., SQS) for reliability and idempotency.
+## Data Flow
+1. Scheduler → Sheets  
+2. Sheets → Filter  
+3. Filter → Media Retrieval  
+4. Media → LinkedIn Upload Session  
+5. Upload Session → Media Upload  
+6. Media Upload → Post Publish  
+7. Post Publish → Validation  
+8. Validation → Sheets Update  
